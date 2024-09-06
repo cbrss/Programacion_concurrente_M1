@@ -8,6 +8,7 @@
 #include <sys/prctl.h>
 
 #define EXIT_SUCCESS 0
+#define TIMETOSLEEP 30
 
 void errorChild(char* nameChild);
 void changeName(char* name);
@@ -120,7 +121,7 @@ void changeName(char* name)
 void sleepAndWait(int cantWaits)
 {
   int i;
-  sleep(30);
+  sleep(TIMETOSLEEP);
   for(i=0;i<cantWaits;i++)
     wait(NULL);
 }
