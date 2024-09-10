@@ -4,11 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-// para ver los procesos en ps: Get-Process | Where-Object { $_.Name -like "java*" }
-
-
 public class MainProcess {
-	
 	public static final int TIME_VERIFICATION = 4000;
 
 	public static void main(String[] args) throws IOException, InterruptedException {
@@ -18,7 +14,7 @@ public class MainProcess {
 	    long ppid = process.parent().get().pid();
 	    String processName="";
 
-	    if(args.length == 0) {
+	    if (args.length == 0) {
 	    	processName = "A";
 	    } else {
 	    	processName = args[0];
@@ -27,29 +23,29 @@ public class MainProcess {
 	    
 	    List<Process> childs = new ArrayList<>();
 	    
-	    if(processName.equals("A")) {
+	    if (processName.equals("A")) {
 	    	childs.add(createProcess("B"));
 	    }
-	    else if(processName.equals("B")){
+	    else if (processName.equals("B")) {
 	    	childs.add(createProcess("C"));
 	    	childs.add(createProcess("D"));
 	    }
-	    else if(processName.equals("C")) {
+	    else if (processName.equals("C")) {
 	    	childs.add(createProcess("E"));
 	    }
-	    else if(processName.equals("E")) {
+	    else if (processName.equals("E")) {
 	    	childs.add(createProcess("H"));
 	    	childs.add(createProcess("I"));
 	    }
-	    else if(processName.equals("D")) {
+	    else if (processName.equals("D")) {
 	    	childs.add(createProcess("F"));
 	    	childs.add(createProcess("G"));
 	    } 
 	
-	    Thread.sleep(TIME_VERIFICATION);	//duerme todos los procesos
+	    Thread.sleep(TIME_VERIFICATION);	// Duerme todos los procesos
 	    
 	    for(Process child : childs) {
-	    	child.waitFor(); // el proceso solo continua si el proceso hijo termina
+	    	child.waitFor(); // El proceso solo continua si el proceso hijo termina
 	    }
 	}
 	
