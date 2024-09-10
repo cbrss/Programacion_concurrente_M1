@@ -18,7 +18,7 @@ public class CharacterCounter implements Runnable {
 		return this.rp;
 	}
 
-	public void count_characters() {
+	public void count_characters() throws InterruptedException{
 		int count = 0;
 		String line = "";
 
@@ -28,7 +28,7 @@ public class CharacterCounter implements Runnable {
 				count++;
 			}
 		}
-
+		Thread.sleep(1000);
 		this.rp = count;
 	}
 
