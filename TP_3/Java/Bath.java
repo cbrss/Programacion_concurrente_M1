@@ -15,10 +15,13 @@ public class Bath implements Runnable {
     public static int contador_mujeres = 0;
     public static int contador_hombres = 0;
     
+    public static int espera_mujeres = 0;
+    public static int espera_hombres = 0;
+
     public static String genero_actual = "S";
     
-    public static Semaphore sem_genero_h = new Semaphore(1);
-    public static Semaphore sem_genero_m = new Semaphore(1);
+    public static Semaphore sem_genero_h = new Semaphore(0);
+    public static Semaphore sem_genero_m = new Semaphore(0);
     public static Semaphore sem_acceso_bano = new Semaphore(CAP_BANO);
 
     private String genero;
@@ -32,36 +35,28 @@ public class Bath implements Runnable {
 
     public void usarBano() {
 
+        if (genero_actual.equals("S")){ //TODO:sincronizar
+            set_genero(this.genero);
+        }
 
+        /// si el que entra, no es del genero correcto, entonces no le dejo pasar
 
-        /// esto es el semaforo de genero, metodo con sync talvez
-        /// si ejecuto H y despues M, M no entra
-        while (true){
-            
-           
-            if (genero_actual.equals("S")) {
-                System.out.println("Entro por default");
-                break;
-            }
-            else if (genero_actual.equals("H") && this.genero.equals("H") ) {
-                System.out.println("turno hombre");
-                break;
-            } else if (genero_actual.equals("M") && this.genero.equals("M")){
-                System.out.println("turno mujer");
-                break;
-            }
-            try {
-                System.out.println("Esperando: " + this.nombre);
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+        if(!genero_actual.equals(this.genero)){
+
+            if (this.genero.equals("H")){   /// la fila es de mujeres y entra un hombre
+                P("sem_genero_h");
+                set_genero("H");
+            } else {        
+                System.out.println("entro mujer a espera");    
+                espera_mujeres++;    
+                P("sem_genero_m");          /// problema si vienen varias mujeres, y quedan bloqueadas aca, entonces rompe porque solo se libera 1 vez al llegar hombres a 0
+                                                /// contador de mujeres en espera que se ejecute cuando se vacia, como mucho tiene que ser la cap del bano
+                                                    //// SOLUCIONADO: ahora el problema es que si ejecuta dos veces M en espera, al liberar borra todos POSIBLMENTE CORRECTO YA QUE DEPENDE DE LA VELOCIDAD EN QUE INGRESEN, PUEDEN SALIR AL MISMO TIEMPO
+                System.out.println("mujer salio de espera"); 
+                set_genero("M");
             }
         }
         P("acceso_bano");
-        System.out.println("entrando bano: " + this.nombre);
-
-                           ////
 
         if (this.genero.equals("H")) {
             incrementar_contador_hombres();
@@ -69,7 +64,7 @@ public class Bath implements Runnable {
             incrementar_contador_mujeres();
         }
 
-        Main.actualizar_pantalla(this.genero);
+        
         try {
             Thread.sleep(TIME_SLEEP); // Simula el tiempo que el hilo esta usando el baño ////
 
@@ -79,14 +74,35 @@ public class Bath implements Runnable {
 
         if (this.genero.equals("H")) {
             decrementar_contador_hombres();
-    
         } else {
             decrementar_contador_mujeres();
         }
 
-        System.out.println("Salio del bano: " + this.nombre);
-        Main.actualizar_pantalla(this.genero);
+       
+
+        // System.out.println("Salio del bano: " + this.nombre);
+        
         V("acceso_bano");
+        System.out.println("libero bano");
+        if (genero_actual.equals("H") && contador_hombres == 0){    // si la fila es de hombres y se vacio, entonces permito entrar mujeres|hombres y el genero vuelve a default
+           
+            System.out.println("espera mujeres:" + espera_mujeres);
+            for (int i = 0; i < espera_mujeres; i++){
+                V("sem_genero_m");
+            }
+            espera_mujeres = 0;
+            set_genero("S");
+        } else if (genero_actual.equals("M") && contador_mujeres == 0) {
+            
+            for (int i = 0; i < espera_hombres; i++){
+                V("sem_genero_h");
+            }
+            
+            espera_hombres = 0;
+            
+            set_genero("S");
+        }
+
     }
 
     @Override
@@ -127,17 +143,12 @@ public class Bath implements Runnable {
     }
     public static synchronized void incrementar_contador_hombres(){
         contador_hombres++;
-        set_genero("H");
-        
+        Main.actualizar_pantalla("H");
     }
     // syncro solo se hace a nivel objeto, pero si se utiliza static, entonces es a nivel clase
-    public static void decrementar_contador_hombres(){
+    public static synchronized void decrementar_contador_hombres(){
         contador_hombres--;
-        
-        if (contador_hombres == 0){
-          //  V("sem_genero_h");
-            set_genero("S");
-        }
+        Main.actualizar_pantalla("H");
     }
 
     public static synchronized int get_contador_mujeres(){
@@ -145,14 +156,11 @@ public class Bath implements Runnable {
     }
     public static synchronized void incrementar_contador_mujeres(){
         contador_mujeres++;
-        set_genero("M");
+        Main.actualizar_pantalla("M");
     }
     public static synchronized void decrementar_contador_mujeres(){
         contador_mujeres--;
-        if (contador_mujeres == 0){
-           // V("sem_genero_m");
-            set_genero("S");
-        }
+        Main.actualizar_pantalla("M");
     }
     
     public static synchronized void set_genero(String genero) {

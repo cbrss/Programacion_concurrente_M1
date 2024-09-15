@@ -2,7 +2,7 @@ import java.util.Scanner;
 
 
 public class Main {
-    
+    public static int vueltas = 1;
     public static void main(String[] args) {
 
         Scanner scanner = new Scanner(System.in);
@@ -33,9 +33,9 @@ public class Main {
     /// Este seria el recurso compartido
     public static synchronized void actualizar_pantalla(String genero){
         int contador = 0;
-        String str = "";
+        String str = "Baño: ";
         System.out.println();
-        System.out.println("=====================");
+        System.out.println("=====================" + Main.vueltas + "=====================");
         if (genero.equals("H")) {
             contador = Bath.contador_hombres;
         } else{
@@ -46,6 +46,7 @@ public class Main {
         }
         System.out.println(str);
         System.out.println("=====================");
+        Main.vueltas++;
     }
 
   
